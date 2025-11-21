@@ -5,7 +5,9 @@ import {
   infixToPostfix,
   infixToPrefix,
   postfixToInfix,
+  postfixToPrefix,
   prefixToInfix,
+  prefixToPostfix,
 } from "@/utils/converters";
 import {
   validateInfix,
@@ -73,13 +75,11 @@ export const ExpressionInput: React.FC = () => {
       }
 
       const infixResult = postfixToInfix(input);
+      const prefixResult = postfixToPrefix(input);
+
       setPostfix({ result: input, steps: validation.stackTrace || [] });
       setInfix(infixResult);
-
-      if (infixResult.result) {
-        const prefixResult = infixToPrefix(infixResult.result);
-        setPrefix(prefixResult);
-      }
+      setPrefix(prefixResult);
       setShowContent(true);
       return;
     }
@@ -92,13 +92,11 @@ export const ExpressionInput: React.FC = () => {
       }
 
       const infixResult = prefixToInfix(input);
+      const postfixResult = prefixToPostfix(input);
+
       setPrefix({ result: input, steps: validation.stackTrace || [] });
       setInfix(infixResult);
-
-      if (infixResult.result) {
-        const postfixResult = infixToPostfix(infixResult.result);
-        setPostfix(postfixResult);
-      }
+      setPostfix(postfixResult);
       setShowContent(true);
     }
   };

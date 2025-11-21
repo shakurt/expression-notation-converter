@@ -147,7 +147,10 @@ export function postfixToInfix(input: string): ConversionResult {
       }
 
       const operand2 = stack.pop()!;
+      steps.push(createStep(stack, `pop ${operand2}`, stepIndex++));
+
       const operand1 = stack.pop()!;
+      steps.push(createStep(stack, `pop ${operand1}`, stepIndex++));
 
       // Only add parentheses if operands are complex expressions
       const needsParens1 = operand1.includes(" ");
@@ -158,13 +161,7 @@ export function postfixToInfix(input: string): ConversionResult {
       const expression = `${expr1} ${token} ${expr2}`;
 
       stack.push(expression);
-      steps.push(
-        createStep(
-          stack,
-          `pop ${operand2}; pop ${operand1}; push ${expression}`,
-          stepIndex++
-        )
-      );
+      steps.push(createStep(stack, `push ${expression}`, stepIndex++));
       continue;
     }
 
@@ -193,7 +190,10 @@ export function prefixToInfix(input: string): ConversionResult {
       }
 
       const operand1 = stack.pop()!;
+      steps.push(createStep(stack, `pop ${operand1}`, stepIndex++));
+
       const operand2 = stack.pop()!;
+      steps.push(createStep(stack, `pop ${operand2}`, stepIndex++));
 
       // Only add parentheses if operands are complex expressions
       const needsParens1 = operand1.includes(" ");
@@ -204,13 +204,79 @@ export function prefixToInfix(input: string): ConversionResult {
       const expression = `${expr1} ${token} ${expr2}`;
 
       stack.push(expression);
-      steps.push(
-        createStep(
-          stack,
-          `pop ${operand1}; pop ${operand2}; push ${expression}`,
-          stepIndex++
-        )
-      );
+      steps.push(createStep(stack, `push ${expression}`, stepIndex++));
+      continue;
+    }
+
+    return { error: `Unknown token: ${token}`, steps };
+  }
+
+  return { result: stack.join(" "), steps };
+}
+
+export function prefixToPostfix(input: string): ConversionResult {
+  const tokens = tokenize(input).reverse();
+  const stack: string[] = [];
+  const steps: StackState[] = [];
+  let stepIndex = 0;
+
+  for (const token of tokens) {
+    if (isOperand(token)) {
+      stack.push(token);
+      steps.push(createStep(stack, `push ${token}`, stepIndex++));
+      continue;
+    }
+
+    if (BINARY_OPERATORS.includes(token)) {
+      if (stack.length < 2) {
+        return { error: `Operator ${token} requires 2 operands`, steps };
+      }
+
+      const operand1 = stack.pop()!;
+      steps.push(createStep(stack, `pop ${operand1}`, stepIndex++));
+
+      const operand2 = stack.pop()!;
+      steps.push(createStep(stack, `pop ${operand2}`, stepIndex++));
+
+      const postfixExpr = `${operand1} ${operand2} ${token}`;
+      stack.push(postfixExpr);
+      steps.push(createStep(stack, `push ${postfixExpr}`, stepIndex++));
+      continue;
+    }
+
+    return { error: `Unknown token: ${token}`, steps };
+  }
+
+  return { result: stack.join(" "), steps };
+}
+
+export function postfixToPrefix(input: string): ConversionResult {
+  const tokens = tokenize(input);
+  const stack: string[] = [];
+  const steps: StackState[] = [];
+  let stepIndex = 0;
+
+  for (const token of tokens) {
+    if (isOperand(token)) {
+      stack.push(token);
+      steps.push(createStep(stack, `push ${token}`, stepIndex++));
+      continue;
+    }
+
+    if (BINARY_OPERATORS.includes(token)) {
+      if (stack.length < 2) {
+        return { error: `Operator ${token} requires 2 operands`, steps };
+      }
+
+      const operand2 = stack.pop()!;
+      steps.push(createStep(stack, `pop ${operand2}`, stepIndex++));
+
+      const operand1 = stack.pop()!;
+      steps.push(createStep(stack, `pop ${operand1}`, stepIndex++));
+
+      const prefixExpr = `${token} ${operand1} ${operand2}`;
+      stack.push(prefixExpr);
+      steps.push(createStep(stack, `push ${prefixExpr}`, stepIndex++));
       continue;
     }
 

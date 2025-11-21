@@ -58,7 +58,7 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
         </div>
 
         <div className="flex-1" aria-label="Stack Trace">
-          <h4 className="mb-2 text-xs text-white">Stack trace (all steps)</h4>
+          <h4 className="mb-2 text-xs text-white">Stack progression</h4>
           <div className="bg-secondary max-h-40 overflow-auto rounded p-2 text-sm">
             {hasStates ? (
               states.map((state) => (
@@ -69,9 +69,13 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
                   <span className="text-xs text-gray-700">
                     Step #{state.stepIndex + 1}
                   </span>
-                  <span className="text-sm text-gray-600">
-                    {state.snapshot}
-                  </span>
+                  <div className="font-mono text-sm text-gray-800">
+                    {state.snapshot.length > 0 ? (
+                      <span>[{state.snapshot.join(", ")}]</span>
+                    ) : (
+                      <span className="text-gray-500 italic">empty</span>
+                    )}
+                  </div>
                 </div>
               ))
             ) : (
