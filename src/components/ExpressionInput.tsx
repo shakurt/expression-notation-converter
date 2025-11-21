@@ -101,7 +101,7 @@ export const ExpressionInput: React.FC = () => {
   };
 
   return (
-    <section className="mx-auto max-w-5xl p-4">
+    <section className="mx-auto max-w-7xl p-4">
       <form
         className={`flex gap-2 ${!error && "mb-3"}`}
         aria-label="Input Control"
@@ -134,6 +134,8 @@ export const ExpressionInput: React.FC = () => {
           className="flex-1 rounded border p-2"
           placeholder="(A + B) * C |OR| A B + C * |OR| * + A B C"
           aria-label="Expression input"
+          name="expression"
+          autoComplete="on"
         />
 
         <button
@@ -146,7 +148,7 @@ export const ExpressionInput: React.FC = () => {
       {error && <div className="my-3 text-sm text-red-500">{error}</div>}
 
       {showContent && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {notationType !== "infix" && (
             <NotationCard
               title="Infix"

@@ -38,10 +38,10 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
         </span>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-2">
         {/* Output Stack */}
         <div className="bg-secondary w-48 rounded-md border p-2">
-          <span className="mb-2 block text-xs font-medium text-white">
+          <span className="mb-2 block text-center text-xs font-medium text-nowrap text-gray-700">
             {hasOperatorStack ? "Output Stack" : "Stack"}
           </span>
           <div className="flex min-h-[100px] flex-col-reverse gap-2">
@@ -65,7 +65,7 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
         {/* Operator Stack - only shown for infix conversions */}
         {hasOperatorStack && (
           <div className="bg-secondary w-48 rounded-md border p-2">
-            <span className="mb-2 block text-xs font-medium text-white">
+            <span className="mb-2 block text-center text-xs font-medium text-nowrap text-gray-700">
               Operator Stack
             </span>
             <div className="flex min-h-[100px] flex-col-reverse gap-2">
@@ -77,7 +77,7 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: ANIMATION_DURATION }}
-                    className="bg-card text-primary rounded p-2 text-sm font-medium shadow-sm"
+                    className="bg-card rounded p-2 text-sm font-medium text-white shadow-sm"
                   >
                     {item}
                   </motion.div>
@@ -87,38 +87,47 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
           </div>
         )}
 
-        {/* Stack Trace */}
-        <div className="flex-1" aria-label="Stack Trace">
-          <h4 className="mb-2 text-xs text-white">Stack progression</h4>
-          <div className="bg-secondary max-h-40 overflow-auto rounded p-2 text-sm">
+        {/* Stack Progression */}
+        <div
+          className="bg-secondary max-h-[400px] min-h-[100px] w-64 overflow-auto rounded-md border p-2"
+          aria-label="Stack Progression"
+        >
+          <span className="mb-2 block text-center text-xs font-medium text-nowrap text-gray-700">
+            Progression
+          </span>
+          <div className="flex flex-col gap-1">
             {hasStates ? (
               states.map((state) => (
                 <div
                   key={state.stepIndex}
-                  className="mb-1 flex flex-col gap-1 border-b pb-1 last:border-b-0"
+                  className="bg-card border-b border-gray-700 p-1 pb-1 last:border-b-0"
                 >
-                  <span className="text-xs text-gray-700">
+                  <span className="text-primary block text-center text-xs font-medium">
                     Step #{state.stepIndex + 1}
                   </span>
-                  <div className="font-mono text-xs text-gray-800">
+                  <div className="font-mono text-xs text-white">
                     {state.snapshot.length > 0 ? (
-                      <span>Output: [{state.snapshot.join(", ")}]</span>
+                      <div className="flex flex-col items-start">
+                        <span>Output:</span>[{state.snapshot.join(", ")}]
+                      </div>
                     ) : (
-                      <span className="text-gray-500 italic">
-                        Output: empty
-                      </span>
+                      <div className="flex flex-col items-start text-gray-500 italic">
+                        <span>Output:</span>
+                        empty
+                      </div>
                     )}
                     {state.operatorStack !== undefined && (
                       <>
-                        <br />
                         {state.operatorStack.length > 0 ? (
-                          <span>
-                            Operators: [{state.operatorStack.join(", ")}]
-                          </span>
+                          <div className="flex flex-col items-start">
+                            <span>Operators:</span>[
+                            {state.operatorStack.join(", ")}]
+                          </div>
                         ) : (
-                          <span className="text-gray-500 italic">
-                            Operators: empty
-                          </span>
+                          <div className="flex flex-col items-start text-gray-500 italic">
+                            <span>Operators:</span>
+                            empty
+                          </div>
                         )}
                       </>
                     )}
