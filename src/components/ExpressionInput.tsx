@@ -21,7 +21,6 @@ const EMPTY_RESULT: ConversionResult = { result: undefined, steps: [] };
 
 export const ExpressionInput: React.FC = () => {
   const [notationType, setNotationType] = useState<Notation>("infix");
-  // TODO
   const [input, setInput] = useState("(a + b) * c");
   const [error, setError] = useState<string | null>(null);
   const [showContent, setShowContent] = useState(false);

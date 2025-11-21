@@ -8,6 +8,8 @@ export type Token = string;
 export type StackState = {
   /** Snapshot of stack elements (from bottom to top for display) */
   snapshot: string[];
+  /** Operator stack snapshot (for infix conversions using Shunting-yard algorithm) */
+  operatorStack?: string[];
   /** Description of the operation (e.g., push X, pop X, emit...) */
   action?: string;
   /** Step number in the sequence */

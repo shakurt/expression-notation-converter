@@ -27,6 +27,8 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
   const currentState = getCurrentState();
   const hasStates = states.length > 0;
 
+  const hasOperatorStack = currentState.operatorStack !== undefined;
+
   return (
     <section className="w-full" aria-label="Stack Visualizer">
       <div className="mb-2 flex flex-col gap-1" aria-label="Title Container">
@@ -37,13 +39,16 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
       </div>
 
       <div className="flex gap-4">
+        {/* Output Stack */}
         <div className="bg-secondary w-48 rounded-md border p-2">
-          <span className="mb-2 text-xs text-gray-700">Stack</span>
+          <span className="mb-2 block text-xs font-medium text-white">
+            {hasOperatorStack ? "Output Stack" : "Stack"}
+          </span>
           <div className="flex min-h-[100px] flex-col-reverse gap-2">
             <AnimatePresence>
               {currentState.snapshot.map((item, index) => (
                 <motion.div
-                  key={`${item}-${index}`}
+                  key={`output-${item}-${index}`}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
@@ -57,6 +62,32 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
           </div>
         </div>
 
+        {/* Operator Stack - only shown for infix conversions */}
+        {hasOperatorStack && (
+          <div className="bg-secondary w-48 rounded-md border p-2">
+            <span className="mb-2 block text-xs font-medium text-white">
+              Operator Stack
+            </span>
+            <div className="flex min-h-[100px] flex-col-reverse gap-2">
+              <AnimatePresence>
+                {currentState.operatorStack!.map((item, index) => (
+                  <motion.div
+                    key={`operator-${item}-${index}`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: ANIMATION_DURATION }}
+                    className="bg-card text-primary rounded p-2 text-sm font-medium shadow-sm"
+                  >
+                    {item}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </div>
+        )}
+
+        {/* Stack Trace */}
         <div className="flex-1" aria-label="Stack Trace">
           <h4 className="mb-2 text-xs text-white">Stack progression</h4>
           <div className="bg-secondary max-h-40 overflow-auto rounded p-2 text-sm">
@@ -69,11 +100,27 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
                   <span className="text-xs text-gray-700">
                     Step #{state.stepIndex + 1}
                   </span>
-                  <div className="font-mono text-sm text-gray-800">
+                  <div className="font-mono text-xs text-gray-800">
                     {state.snapshot.length > 0 ? (
-                      <span>[{state.snapshot.join(", ")}]</span>
+                      <span>Output: [{state.snapshot.join(", ")}]</span>
                     ) : (
-                      <span className="text-gray-500 italic">empty</span>
+                      <span className="text-gray-500 italic">
+                        Output: empty
+                      </span>
+                    )}
+                    {state.operatorStack !== undefined && (
+                      <>
+                        <br />
+                        {state.operatorStack.length > 0 ? (
+                          <span>
+                            Operators: [{state.operatorStack.join(", ")}]
+                          </span>
+                        ) : (
+                          <span className="text-gray-500 italic">
+                            Operators: empty
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

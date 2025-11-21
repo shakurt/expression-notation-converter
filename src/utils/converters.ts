@@ -10,10 +10,12 @@ function isOperand(token: string): boolean {
 function createStep(
   stack: string[],
   action: string,
-  stepIndex: number
+  stepIndex: number,
+  operatorStack?: string[]
 ): StackState {
   return {
     snapshot: [...stack],
+    operatorStack: operatorStack ? [...operatorStack] : undefined,
     action,
     stepIndex,
   };
@@ -31,7 +33,9 @@ export function infixToPostfix(input: string): ConversionResult {
   for (const token of tokens) {
     if (isOperand(token)) {
       output.push(token);
-      steps.push(createStep(output, `add ${token} to output`, stepIndex++));
+      steps.push(
+        createStep(output, `add ${token} to output`, stepIndex++, operatorStack)
+      );
       continue;
     }
 
@@ -39,9 +43,10 @@ export function infixToPostfix(input: string): ConversionResult {
       operatorStack.push(token);
       steps.push(
         createStep(
-          [...output, `[op: ${operatorStack.join(", ")}]`],
+          output,
           `push ( to operator stack`,
-          stepIndex++
+          stepIndex++,
+          operatorStack
         )
       );
       continue;
@@ -52,17 +57,21 @@ export function infixToPostfix(input: string): ConversionResult {
         const operator = operatorStack.pop()!;
         output.push(operator);
         steps.push(
-          createStep(output, `move ${operator} to output`, stepIndex++)
+          createStep(
+            output,
+            `move ${operator} to output`,
+            stepIndex++,
+            operatorStack
+          )
         );
       }
       operatorStack.pop(); // Remove '('
-      const stackDisplay =
-        operatorStack.length > 0 ? `[op: ${operatorStack.join(", ")}]` : "";
       steps.push(
         createStep(
-          [...output, stackDisplay].filter((s) => s),
+          output,
           `remove ( from operator stack`,
-          stepIndex++
+          stepIndex++,
+          operatorStack
         )
       );
       continue;
@@ -79,15 +88,23 @@ export function infixToPostfix(input: string): ConversionResult {
     ) {
       const operator = operatorStack.pop()!;
       output.push(operator);
-      steps.push(createStep(output, `move ${operator} to output`, stepIndex++));
+      steps.push(
+        createStep(
+          output,
+          `move ${operator} to output`,
+          stepIndex++,
+          operatorStack
+        )
+      );
     }
 
     operatorStack.push(token);
     steps.push(
       createStep(
-        [...output, `[op: ${operatorStack.join(", ")}]`],
+        output,
         `push ${token} to operator stack`,
-        stepIndex++
+        stepIndex++,
+        operatorStack
       )
     );
   }
@@ -96,7 +113,14 @@ export function infixToPostfix(input: string): ConversionResult {
   while (operatorStack.length) {
     const operator = operatorStack.pop()!;
     output.push(operator);
-    steps.push(createStep(output, `move ${operator} to output`, stepIndex++));
+    steps.push(
+      createStep(
+        output,
+        `move ${operator} to output`,
+        stepIndex++,
+        operatorStack
+      )
+    );
   }
 
   return { result: output.join(" "), steps };
@@ -115,7 +139,9 @@ export function infixToPrefix(input: string): ConversionResult {
   for (const token of tokens) {
     if (isOperand(token)) {
       output.push(token);
-      steps.push(createStep(output, `add ${token} to output`, stepIndex++));
+      steps.push(
+        createStep(output, `add ${token} to output`, stepIndex++, operatorStack)
+      );
       continue;
     }
 
@@ -123,9 +149,10 @@ export function infixToPrefix(input: string): ConversionResult {
       operatorStack.push(token);
       steps.push(
         createStep(
-          [...output, `[op: ${operatorStack.join(", ")}]`],
+          output,
           `push ) to operator stack`,
-          stepIndex++
+          stepIndex++,
+          operatorStack
         )
       );
       continue;
@@ -137,18 +164,22 @@ export function infixToPrefix(input: string): ConversionResult {
         if (BINARY_OPERATORS.includes(operator)) {
           output.push(operator);
           steps.push(
-            createStep(output, `move ${operator} to output`, stepIndex++)
+            createStep(
+              output,
+              `move ${operator} to output`,
+              stepIndex++,
+              operatorStack
+            )
           );
         }
       }
       operatorStack.pop(); // Remove ')'
-      const stackDisplay =
-        operatorStack.length > 0 ? `[op: ${operatorStack.join(", ")}]` : "";
       steps.push(
         createStep(
-          [...output, stackDisplay].filter((s) => s),
+          output,
           `remove ) from operator stack`,
-          stepIndex++
+          stepIndex++,
+          operatorStack
         )
       );
       continue;
@@ -169,16 +200,22 @@ export function infixToPrefix(input: string): ConversionResult {
         const operator = operatorStack.pop()!;
         output.push(operator);
         steps.push(
-          createStep(output, `move ${operator} to output`, stepIndex++)
+          createStep(
+            output,
+            `move ${operator} to output`,
+            stepIndex++,
+            operatorStack
+          )
         );
       }
 
       operatorStack.push(token);
       steps.push(
         createStep(
-          [...output, `[op: ${operatorStack.join(", ")}]`],
+          output,
           `push ${token} to operator stack`,
-          stepIndex++
+          stepIndex++,
+          operatorStack
         )
       );
     }
@@ -189,7 +226,14 @@ export function infixToPrefix(input: string): ConversionResult {
     const operator = operatorStack.pop()!;
     if (BINARY_OPERATORS.includes(operator)) {
       output.push(operator);
-      steps.push(createStep(output, `move ${operator} to output`, stepIndex++));
+      steps.push(
+        createStep(
+          output,
+          `move ${operator} to output`,
+          stepIndex++,
+          operatorStack
+        )
+      );
     }
   }
 
