@@ -148,7 +148,14 @@ export function postfixToInfix(input: string): ConversionResult {
 
       const operand2 = stack.pop()!;
       const operand1 = stack.pop()!;
-      const expression = `( ${operand1} ${token} ${operand2} )`;
+
+      // Only add parentheses if operands are complex expressions
+      const needsParens1 = operand1.includes(" ");
+      const needsParens2 = operand2.includes(" ");
+
+      const expr1 = needsParens1 ? `( ${operand1} )` : operand1;
+      const expr2 = needsParens2 ? `( ${operand2} )` : operand2;
+      const expression = `${expr1} ${token} ${expr2}`;
 
       stack.push(expression);
       steps.push(
@@ -187,7 +194,14 @@ export function prefixToInfix(input: string): ConversionResult {
 
       const operand1 = stack.pop()!;
       const operand2 = stack.pop()!;
-      const expression = `( ${operand1} ${token} ${operand2} )`;
+
+      // Only add parentheses if operands are complex expressions
+      const needsParens1 = operand1.includes(" ");
+      const needsParens2 = operand2.includes(" ");
+
+      const expr1 = needsParens1 ? `( ${operand1} )` : operand1;
+      const expr2 = needsParens2 ? `( ${operand2} )` : operand2;
+      const expression = `${expr1} ${token} ${expr2}`;
 
       stack.push(expression);
       steps.push(
