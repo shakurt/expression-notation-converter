@@ -111,8 +111,9 @@ export const ExpressionInput: React.FC = () => {
         <select
           value={notationType}
           onChange={(e) => {
-            resetResults();
             setNotationType(e.target.value as Notation);
+            resetResults();
+            setInput("");
           }}
           className="rounded border p-2"
           aria-label="Select notation"

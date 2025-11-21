@@ -38,7 +38,7 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
 
       <div className="flex gap-4">
         <div className="bg-secondary w-48 rounded-md border p-2">
-          <div className="mb-2 text-xs text-gray-700">Stack (bottom → top)</div>
+          <span className="mb-2 text-xs text-gray-700">Stack</span>
           <div className="flex min-h-[100px] flex-col-reverse gap-2">
             <AnimatePresence>
               {currentState.snapshot.map((item, index) => (

@@ -1,5 +1,6 @@
 import { BINARY_OPERATORS } from "@/constants";
 import type { ValidationResult, StackState } from "@/types";
+
 import { tokenize } from "./tokenize";
 
 function isOperand(token: string): boolean {

@@ -31,19 +31,19 @@ export function infixToPostfix(input: string): ConversionResult {
   for (const token of tokens) {
     if (isOperand(token)) {
       output.push(token);
-      steps.push(
-        createStep(
-          operatorStack,
-          `emit ${token} -> output: ${output.join(" ")}`,
-          stepIndex++
-        )
-      );
+      steps.push(createStep(output, `add ${token} to output`, stepIndex++));
       continue;
     }
 
     if (token === "(") {
       operatorStack.push(token);
-      steps.push(createStep(operatorStack, "push (", stepIndex++));
+      steps.push(
+        createStep(
+          [...output, `[op: ${operatorStack.join(", ")}]`],
+          `push ( to operator stack`,
+          stepIndex++
+        )
+      );
       continue;
     }
 
@@ -52,15 +52,19 @@ export function infixToPostfix(input: string): ConversionResult {
         const operator = operatorStack.pop()!;
         output.push(operator);
         steps.push(
-          createStep(
-            operatorStack,
-            `pop ${operator} -> output: ${output.join(" ")}`,
-            stepIndex++
-          )
+          createStep(output, `move ${operator} to output`, stepIndex++)
         );
       }
       operatorStack.pop(); // Remove '('
-      steps.push(createStep(operatorStack, "pop (", stepIndex++));
+      const stackDisplay =
+        operatorStack.length > 0 ? `[op: ${operatorStack.join(", ")}]` : "";
+      steps.push(
+        createStep(
+          [...output, stackDisplay].filter((s) => s),
+          `remove ( from operator stack`,
+          stepIndex++
+        )
+      );
       continue;
     }
 
@@ -75,30 +79,24 @@ export function infixToPostfix(input: string): ConversionResult {
     ) {
       const operator = operatorStack.pop()!;
       output.push(operator);
-      steps.push(
-        createStep(
-          operatorStack,
-          `pop ${operator} -> output: ${output.join(" ")}`,
-          stepIndex++
-        )
-      );
+      steps.push(createStep(output, `move ${operator} to output`, stepIndex++));
     }
 
     operatorStack.push(token);
-    steps.push(createStep(operatorStack, `push ${token}`, stepIndex++));
+    steps.push(
+      createStep(
+        [...output, `[op: ${operatorStack.join(", ")}]`],
+        `push ${token} to operator stack`,
+        stepIndex++
+      )
+    );
   }
 
   // Pop remaining operators
   while (operatorStack.length) {
     const operator = operatorStack.pop()!;
     output.push(operator);
-    steps.push(
-      createStep(
-        operatorStack,
-        `pop ${operator} -> output: ${output.join(" ")}`,
-        stepIndex++
-      )
-    );
+    steps.push(createStep(output, `move ${operator} to output`, stepIndex++));
   }
 
   return { result: output.join(" "), steps };
