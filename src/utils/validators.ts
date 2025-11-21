@@ -1,123 +1,124 @@
 import { BINARY_OPERATORS } from "@/constants";
 import type { ValidationResult, StackState } from "@/types";
-
 import { tokenize } from "./tokenize";
 
-/*
-  ولیدیشن دقیق برای postfix / prefix / infix
-  همهٔ ولیدیشن‌ها شبیه‌سازی با پشته انجام می‌دهند و stackTrace برای نمایش مراحل تولید می‌کنند.
-*/
-
-function isOperand(tok: string) {
-  // قبول می‌کنیم: اعداد (مثل 12, 3.14) یا شناسه‌های حروفی (A, var)
-  return /^\d+(\.\d+)?$/.test(tok) || /^[A-Za-z]+$/.test(tok);
+function isOperand(token: string): boolean {
+  // Accept numbers (e.g., 12, 3.14) or alphabetic identifiers (e.g., A, var)
+  return /^\d+(\.\d+)?$/.test(token) || /^[A-Za-z]+$/.test(token);
 }
 
-// ================= Postfix =================
+function createStep(
+  stack: string[],
+  action: string,
+  stepIndex: number
+): StackState {
+  return {
+    snapshot: [...stack],
+    action,
+    stepIndex,
+  };
+}
+
 export function validatePostfix(input: string): ValidationResult {
   const tokens = tokenize(input);
   const stackTrace: StackState[] = [];
   const stack: string[] = [];
-  let step = 0;
+  let stepIndex = 0;
 
-  for (const tok of tokens) {
-    if (isOperand(tok)) {
-      stack.push(tok);
-      stackTrace.push({
-        snapshot: [...stack],
-        action: `push ${tok}`,
-        stepIndex: step++,
-      });
+  for (const token of tokens) {
+    if (isOperand(token)) {
+      stack.push(token);
+      stackTrace.push(createStep(stack, `push ${token}`, stepIndex++));
       continue;
     }
-    if (BINARY_OPERATORS.includes(tok)) {
+
+    if (BINARY_OPERATORS.includes(token)) {
       if (stack.length < 2) {
         return {
           valid: false,
-          error: `Operator '${tok}' needs 2 operands but stack has ${stack.length}`,
+          error: `Operator '${token}' requires 2 operands but stack has ${stack.length}`,
           stackTrace,
         };
       }
-      const b = stack.pop()!;
-      const a = stack.pop()!;
-      stackTrace.push({
-        snapshot: [...stack],
-        action: `pop ${b}; pop ${a} (apply ${tok})`,
-        stepIndex: step++,
-      });
-      // push placeholder
-      stack.push("(res)");
-      stackTrace.push({
-        snapshot: [...stack],
-        action: `push (res)`,
-        stepIndex: step++,
-      });
+
+      const operand2 = stack.pop()!;
+      const operand1 = stack.pop()!;
+      stackTrace.push(
+        createStep(
+          stack,
+          `pop ${operand2}; pop ${operand1} (apply ${token})`,
+          stepIndex++
+        )
+      );
+
+      stack.push("(result)");
+      stackTrace.push(createStep(stack, `push (result)`, stepIndex++));
       continue;
     }
-    return { valid: false, error: `Unknown token '${tok}'`, stackTrace };
+
+    return { valid: false, error: `Unknown token: '${token}'`, stackTrace };
   }
 
   if (stack.length !== 1) {
     return {
       valid: false,
-      error: `Postfix must finish with exactly 1 item in stack but has ${stack.length}`,
+      error: `Postfix expression must end with exactly 1 item on stack, but has ${stack.length}`,
       stackTrace,
     };
   }
+
   return { valid: true, stackTrace };
 }
 
-// ================= Prefix =================
 export function validatePrefix(input: string): ValidationResult {
-  // خواندن از راست به چپ برای prefix
+  // Read tokens from right to left for prefix notation
   const tokens = tokenize(input).reverse();
   const stackTrace: StackState[] = [];
   const stack: string[] = [];
-  let step = 0;
+  let stepIndex = 0;
 
-  for (const tok of tokens) {
-    if (isOperand(tok)) {
-      stack.push(tok);
-      stackTrace.push({
-        snapshot: [...stack],
-        action: `push ${tok}`,
-        stepIndex: step++,
-      });
+  for (const token of tokens) {
+    if (isOperand(token)) {
+      stack.push(token);
+      stackTrace.push(createStep(stack, `push ${token}`, stepIndex++));
       continue;
     }
-    if (BINARY_OPERATORS.includes(tok)) {
+
+    if (BINARY_OPERATORS.includes(token)) {
       if (stack.length < 2) {
         return {
           valid: false,
-          error: `Operator '${tok}' needs 2 operands but stack has ${stack.length}`,
+          error: `Operator '${token}' requires 2 operands but stack has ${stack.length}`,
           stackTrace,
         };
       }
-      const b = stack.pop()!;
-      const a = stack.pop()!;
-      stackTrace.push({
-        snapshot: [...stack],
-        action: `pop ${b}; pop ${a} (apply ${tok})`,
-        stepIndex: step++,
-      });
-      stack.push("(res)");
-      stackTrace.push({
-        snapshot: [...stack],
-        action: `push (res)`,
-        stepIndex: step++,
-      });
+
+      const operand2 = stack.pop()!;
+      const operand1 = stack.pop()!;
+      stackTrace.push(
+        createStep(
+          stack,
+          `pop ${operand2}; pop ${operand1} (apply ${token})`,
+          stepIndex++
+        )
+      );
+
+      stack.push("(result)");
+      stackTrace.push(createStep(stack, `push (result)`, stepIndex++));
       continue;
     }
-    return { valid: false, error: `Unknown token '${tok}'`, stackTrace };
+
+    return { valid: false, error: `Unknown token: '${token}'`, stackTrace };
   }
 
   if (stack.length !== 1) {
     return {
       valid: false,
-      error: `Prefix must finish with exactly 1 item in stack but has ${stack.length}`,
+      error: `Prefix expression must end with exactly 1 item on stack, but has ${stack.length}`,
       stackTrace,
     };
   }
+
   return { valid: true, stackTrace };
 }
 

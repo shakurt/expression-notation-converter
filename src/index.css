@@ -3,7 +3,7 @@
 @theme {
   --color-bg: #222831;
   --color-card: #393e46;
-  --color-primary: #ffd369;
+  --color-primary: #ffc745;
   --color-secondary: #eeeeee;
 }
 
@@ -47,4 +47,27 @@ a.active {
 
 .node__leaf > circle {
   fill: white;
+}
+
+/* Custom Scrollbar Styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #eeeeee #393e46;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  @apply bg-card rounded;
+}
+
+*::-webkit-scrollbar-thumb {
+  @apply bg-primary rounded;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #eeeeee;
 }

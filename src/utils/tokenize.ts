@@ -1,31 +1,47 @@
-// جداکنندهٔ توکن‌ها — پشتیبانی از مواردی با و بدون فاصله
+/**
+ * Tokenizes input string into array of tokens
+ * Supports expressions with or without spaces
+ * Handles operators, parentheses, numbers, and variables
+ */
 export function tokenize(input: string): string[] {
   const tokens: string[] = [];
-  let cur = "";
-  const pushCur = () => {
-    if (cur !== "") {
-      tokens.push(cur);
-      cur = "";
+  let currentToken = "";
+
+  const pushCurrentToken = () => {
+    if (currentToken) {
+      tokens.push(currentToken);
+      currentToken = "";
     }
   };
-  for (let i = 0; i < input.length; i++) {
-    const ch = input[i];
-    if (ch === " ") {
-      pushCur();
+
+  const operators = "+-*/^";
+  const parentheses = "()";
+
+  for (const char of input) {
+    // Skip spaces
+    if (char === " ") {
+      pushCurrentToken();
       continue;
     }
-    if (ch === "(" || ch === ")") {
-      pushCur();
-      tokens.push(ch);
+
+    // Handle parentheses
+    if (parentheses.includes(char)) {
+      pushCurrentToken();
+      tokens.push(char);
       continue;
     }
-    if ("+-*/^".includes(ch)) {
-      pushCur();
-      tokens.push(ch);
+
+    // Handle operators
+    if (operators.includes(char)) {
+      pushCurrentToken();
+      tokens.push(char);
       continue;
     }
-    cur += ch;
+
+    // Build multi-character tokens (numbers, variables)
+    currentToken += char;
   }
-  pushCur();
+
+  pushCurrentToken();
   return tokens;
 }

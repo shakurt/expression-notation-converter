@@ -1,40 +1,54 @@
-import React from "react";
-
 import { motion, AnimatePresence } from "framer-motion";
 
 import type { StackState } from "@/types";
 
-type Props = {
+type StackVisualizerProps = {
   states: StackState[];
   currentStep?: number;
 };
 
-export const StackVisualizer: React.FC<Props> = ({
+const EMPTY_STATE: StackState = {
+  snapshot: [],
+  action: "No steps available",
+  stepIndex: 0,
+};
+
+const ANIMATION_DURATION = 0.16;
+
+const StackVisualizer: React.FC<StackVisualizerProps> = ({
   states,
   currentStep = states.length - 1,
 }) => {
-  const state = states.length
-    ? states[currentStep] || states[states.length - 1]
-    : { snapshot: [], action: "no steps", stepIndex: 0 };
+  const getCurrentState = (): StackState => {
+    if (states.length === 0) return EMPTY_STATE;
+    return states[currentStep] ?? states[states.length - 1];
+  };
+
+  const currentState = getCurrentState();
+  const hasStates = states.length > 0;
 
   return (
-    <div className="w-full">
-      <div className="mb-2 text-sm text-gray-600">
-        Step: {state.stepIndex} — {state.action}
+    <section className="w-full" aria-label="Stack Visualizer">
+      <div className="mb-2 flex flex-col gap-1" aria-label="Title Container">
+        <h3 className="text-sm font-semibold text-white">Stack Visualizer</h3>
+        <span className="text-xs">
+          Step: {currentState.stepIndex + 1} — {currentState.action}
+        </span>
       </div>
+
       <div className="flex gap-4">
-        <div className="w-48 rounded-md border bg-gray-50 p-2">
-          <div className="mb-2 text-xs text-gray-500">Stack (bottom → top)</div>
-          <div className="flex flex-col-reverse gap-2">
+        <div className="bg-secondary w-48 rounded-md border p-2">
+          <div className="mb-2 text-xs text-gray-700">Stack (bottom → top)</div>
+          <div className="flex min-h-[100px] flex-col-reverse gap-2">
             <AnimatePresence>
-              {state.snapshot.map((item, idx) => (
+              {currentState.snapshot.map((item, index) => (
                 <motion.div
-                  key={`${item}-${idx}`}
+                  key={`${item}-${index}`}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.16 }}
-                  className="rounded border bg-white p-2 text-sm"
+                  transition={{ duration: ANIMATION_DURATION }}
+                  className="bg-card rounded p-2 text-sm font-medium text-white shadow-sm"
                 >
                   {item}
                 </motion.div>
@@ -43,23 +57,31 @@ export const StackVisualizer: React.FC<Props> = ({
           </div>
         </div>
 
-        <div className="flex-1">
-          <div className="mb-2 text-xs text-gray-500">
-            Stack trace (all steps)
-          </div>
-          <div className="max-h-40 overflow-auto rounded bg-gray-50 p-2 text-sm">
-            {states.map((s) => (
-              <div key={s.stepIndex} className="mb-1">
-                <div className="text-xs text-gray-400">#{s.stepIndex}</div>
-                <div className="">{s.action}</div>
-              </div>
-            ))}
-            {states.length === 0 && (
-              <div className="text-gray-400">No steps to show</div>
+        <div className="flex-1" aria-label="Stack Trace">
+          <h4 className="mb-2 text-xs text-white">Stack trace (all steps)</h4>
+          <div className="bg-secondary max-h-40 overflow-auto rounded p-2 text-sm">
+            {hasStates ? (
+              states.map((state) => (
+                <div
+                  key={state.stepIndex}
+                  className="mb-1 flex flex-col gap-1 border-b pb-1 last:border-b-0"
+                >
+                  <span className="text-xs text-gray-700">
+                    Step #{state.stepIndex + 1}
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    {state.snapshot}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="py-4 text-center text-gray-400">No steps to show</p>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
+
+export default StackVisualizer;

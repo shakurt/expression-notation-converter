@@ -1,53 +1,57 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 
+import Collapse from "@/components/Collapse";
+import ConversionSteps from "@/components/ConversionSteps";
+import StackVisualizer from "@/components/StackVisualizer";
 import type { StackState } from "@/types";
 
-import { Collapse } from "./Collapse";
-import { ConversionSteps } from "./ConversionSteps";
-import { StackVisualizer } from "./StackVisualizer";
-
-type Props = {
+type NotationCardProps = {
   title: string;
   result?: string;
   steps: StackState[];
 };
 
-export const NotationCard: React.FC<Props> = ({ title, result, steps }) => {
-  const [open, setOpen] = useState(false);
+const NotationCard: React.FC<NotationCardProps> = ({
+  title,
+  result,
+  steps,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(
-    steps.length ? steps.length - 1 : 0
+    steps.length > 0 ? steps.length - 1 : 0
   );
 
-  // reset currentStep when steps change
-  React.useEffect(() => {
-    setCurrentStep(steps.length ? steps.length - 1 : 0);
+  // Reset currentStep when steps change
+  useEffect(() => {
+    setCurrentStep(steps.length > 0 ? steps.length - 1 : 0);
   }, [steps]);
 
+  const displayResult = result;
+
   return (
-    <div className="mb-4">
+    <div className="mb-4" aria-label={`${title} notation card`}>
       <Collapse
         title={
-          <div className="flex w-full items-center justify-between">
-            <span className="font-semibold">{title}</span>
-            <span className="font-mono text-xs text-gray-500">
-              {result ?? "—"}
+          <div
+            className="flex w-full items-center font-medium"
+            aria-label="Title Container"
+          >
+            <h2 className="font-bold">{title}:</h2>
+            <span className="ml-1 font-mono text-[13px] text-gray-300">
+              {displayResult}
             </span>
           </div>
         }
-        open={open}
-        onToggle={() => setOpen((v) => !v)}
+        open={isOpen}
+        onToggle={() => setIsOpen((prev) => !prev)}
       >
         <div className="space-y-4">
-          <div className="text-sm">
-            Result: <span className="font-mono">{result ?? "-"}</span>
-          </div>
           <StackVisualizer states={steps} currentStep={currentStep} />
-          <ConversionSteps
-            steps={steps}
-            onSelectStep={(i) => setCurrentStep(i)}
-          />
+          <ConversionSteps steps={steps} onSelectStep={setCurrentStep} />
         </div>
       </Collapse>
     </div>
   );
 };
+
+export default NotationCard;

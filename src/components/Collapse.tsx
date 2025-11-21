@@ -1,7 +1,6 @@
-import React from "react";
-
 import { motion, AnimatePresence } from "framer-motion";
 
+import { DownArrow, UpArrow } from "@/components/icons/ArrowsIcon";
 type CollapseProps = {
   title: React.ReactNode;
   open?: boolean;
@@ -9,30 +8,40 @@ type CollapseProps = {
   children: React.ReactNode;
 };
 
-export const Collapse: React.FC<CollapseProps> = ({
+const ANIMATION_DURATION = 0.2;
+
+const Collapse: React.FC<CollapseProps> = ({
   title,
   open = false,
   onToggle,
   children,
 }) => {
+  const buttonLabel = open ? "Collapse" : "Expand";
+
   return (
-    <div className="rounded-lg border bg-white shadow-sm">
-      <button
-        onClick={onToggle}
+    <div className="bg-card rounded-lg border shadow-sm">
+      <div
         className="flex w-full items-center justify-between px-4 py-3 text-left"
+        aria-expanded={open}
       >
-        <div className="font-medium">{title}</div>
-        <div className="text-sm text-gray-500">
-          {open ? "Collapse" : "Expand"}
-        </div>
-      </button>
+        {title}
+        <button
+          type="button"
+          className="bg-secondary flex cursor-pointer items-center gap-1 rounded px-2 py-1 text-sm text-black"
+          onClick={onToggle}
+        >
+          {buttonLabel}
+          {buttonLabel === "Collapse" ? <UpArrow /> : <DownArrow />}
+        </button>
+      </div>
+
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22 }}
+            transition={{ duration: ANIMATION_DURATION }}
             className="px-4 pb-4"
           >
             {children}
@@ -42,3 +51,5 @@ export const Collapse: React.FC<CollapseProps> = ({
     </div>
   );
 };
+
+export default Collapse;

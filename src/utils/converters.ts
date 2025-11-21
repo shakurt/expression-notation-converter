@@ -1,142 +1,167 @@
 import { PRECEDENCE, RIGHT_ASSOCIATIVE, BINARY_OPERATORS } from "@/constants";
-import type { ConversionResult } from "@/types";
+import type { ConversionResult, StackState } from "@/types";
 import { tokenize } from "@/utils/tokenize";
 
-/* تبدیل‌ها با استفاده از پشته و خروجی مراحل برای نمایش.
-   - infixToPostfix: شانتینگ-یارد با مراحل opStack/output
-   - infixToPrefix: معکوس‌سازی ترفند شناخته‌شده
-   - postfixToInfix & prefixToInfix: بازسازیشان با پشته (ترجیحاً برای نمایش) */
+function isOperand(token: string): boolean {
+  // Check if token is a number (e.g., 12, 3.14) or variable (e.g., A, var)
+  return /^\d+(\.\d+)?$/.test(token) || /^[A-Za-z]+$/.test(token);
+}
 
-function isOperand(tok: string) {
-  return /^\d+(\.\d+)?$/.test(tok) || /^[A-Za-z]+$/.test(tok);
+function createStep(
+  stack: string[],
+  action: string,
+  stepIndex: number
+): StackState {
+  return {
+    snapshot: [...stack],
+    action,
+    stepIndex,
+  };
 }
 
 export function infixToPostfix(input: string): ConversionResult {
   const tokens = tokenize(input);
   const output: string[] = [];
-  const opStack: string[] = [];
-  const steps = [];
-  let step = 0;
+  const operatorStack: string[] = [];
+  const steps: StackState[] = [];
+  let stepIndex = 0;
 
-  for (const tok of tokens) {
-    if (isOperand(tok)) {
-      output.push(tok);
-      steps.push({
-        snapshot: [...opStack],
-        action: `emit ${tok} -> output: ${output.join(" ")}`,
-        stepIndex: step++,
-      });
+  const getTopOperator = () => operatorStack[operatorStack.length - 1];
+
+  for (const token of tokens) {
+    if (isOperand(token)) {
+      output.push(token);
+      steps.push(
+        createStep(
+          operatorStack,
+          `emit ${token} -> output: ${output.join(" ")}`,
+          stepIndex++
+        )
+      );
       continue;
     }
-    if (tok === "(") {
-      opStack.push(tok);
-      steps.push({
-        snapshot: [...opStack],
-        action: "push (",
-        stepIndex: step++,
-      });
+
+    if (token === "(") {
+      operatorStack.push(token);
+      steps.push(createStep(operatorStack, "push (", stepIndex++));
       continue;
     }
-    if (tok === ")") {
-      while (opStack.length && opStack[opStack.length - 1] !== "(") {
-        const op = opStack.pop()!;
-        output.push(op);
-        steps.push({
-          snapshot: [...opStack],
-          action: `pop ${op} -> output: ${output.join(" ")}`,
-          stepIndex: step++,
-        });
+
+    if (token === ")") {
+      while (operatorStack.length && getTopOperator() !== "(") {
+        const operator = operatorStack.pop()!;
+        output.push(operator);
+        steps.push(
+          createStep(
+            operatorStack,
+            `pop ${operator} -> output: ${output.join(" ")}`,
+            stepIndex++
+          )
+        );
       }
-      opStack.pop(); // pop '('
-      steps.push({
-        snapshot: [...opStack],
-        action: "pop (",
-        stepIndex: step++,
-      });
+      operatorStack.pop(); // Remove '('
+      steps.push(createStep(operatorStack, "pop (", stepIndex++));
       continue;
     }
-    // operator
+
+    // Handle operator
+    const topOperator = getTopOperator();
     while (
-      opStack.length &&
-      opStack[opStack.length - 1] !== "(" &&
-      (PRECEDENCE[opStack[opStack.length - 1]] > PRECEDENCE[tok] ||
-        (PRECEDENCE[opStack[opStack.length - 1]] === PRECEDENCE[tok] &&
-          !RIGHT_ASSOCIATIVE[tok]))
+      operatorStack.length &&
+      topOperator !== "(" &&
+      (PRECEDENCE[topOperator] > PRECEDENCE[token] ||
+        (PRECEDENCE[topOperator] === PRECEDENCE[token] &&
+          !RIGHT_ASSOCIATIVE[token]))
     ) {
-      const op = opStack.pop()!;
-      output.push(op);
-      steps.push({
-        snapshot: [...opStack],
-        action: `pop ${op} -> output: ${output.join(" ")}`,
-        stepIndex: step++,
-      });
+      const operator = operatorStack.pop()!;
+      output.push(operator);
+      steps.push(
+        createStep(
+          operatorStack,
+          `pop ${operator} -> output: ${output.join(" ")}`,
+          stepIndex++
+        )
+      );
     }
-    opStack.push(tok);
-    steps.push({
-      snapshot: [...opStack],
-      action: `push ${tok}`,
-      stepIndex: step++,
-    });
+
+    operatorStack.push(token);
+    steps.push(createStep(operatorStack, `push ${token}`, stepIndex++));
   }
 
-  while (opStack.length) {
-    const op = opStack.pop()!;
-    output.push(op);
-    steps.push({
-      snapshot: [...opStack],
-      action: `pop ${op} -> output: ${output.join(" ")}`,
-      stepIndex: step++,
-    });
+  // Pop remaining operators
+  while (operatorStack.length) {
+    const operator = operatorStack.pop()!;
+    output.push(operator);
+    steps.push(
+      createStep(
+        operatorStack,
+        `pop ${operator} -> output: ${output.join(" ")}`,
+        stepIndex++
+      )
+    );
   }
 
   return { result: output.join(" "), steps };
 }
 
 export function infixToPrefix(input: string): ConversionResult {
-  // reverse tokens, swap parens, infix->postfix, reverse output
-  const tokens = tokenize(input)
-    .reverse()
-    .map((tok) => (tok === "(" ? ")" : tok === ")" ? "(" : tok));
-  const reversed = tokens.join(" ");
-  const postfix = infixToPostfix(reversed);
-  if (postfix.error) return { error: postfix.error, steps: postfix.steps };
-  const prefix = postfix.result
-    ? postfix.result.split(" ").reverse().join(" ")
+  // Algorithm: Reverse tokens, swap parentheses, convert to postfix, reverse result
+  const swapParenthesis = (token: string): string => {
+    if (token === "(") return ")";
+    if (token === ")") return "(";
+    return token;
+  };
+
+  const reversedTokens = tokenize(input).reverse().map(swapParenthesis);
+  const reversedInput = reversedTokens.join(" ");
+
+  const postfixResult = infixToPostfix(reversedInput);
+
+  if (postfixResult.error) {
+    return { error: postfixResult.error, steps: postfixResult.steps };
+  }
+
+  const prefixResult = postfixResult.result
+    ? postfixResult.result.split(" ").reverse().join(" ")
     : undefined;
-  return { result: prefix, steps: postfix.steps };
+
+  return { result: prefixResult, steps: postfixResult.steps };
 }
 
 export function postfixToInfix(input: string): ConversionResult {
   const tokens = tokenize(input);
   const stack: string[] = [];
-  const steps = [];
-  let step = 0;
+  const steps: StackState[] = [];
+  let stepIndex = 0;
 
-  for (const tok of tokens) {
-    if (isOperand(tok)) {
-      stack.push(tok);
-      steps.push({
-        snapshot: [...stack],
-        action: `push ${tok}`,
-        stepIndex: step++,
-      });
+  for (const token of tokens) {
+    if (isOperand(token)) {
+      stack.push(token);
+      steps.push(createStep(stack, `push ${token}`, stepIndex++));
       continue;
     }
-    if (BINARY_OPERATORS.includes(tok)) {
-      const b = stack.pop();
-      const a = stack.pop();
-      if (a === undefined || b === undefined)
-        return { error: `Operator ${tok} has insufficient operands`, steps };
-      const expr = `( ${a} ${tok} ${b} )`;
-      stack.push(expr);
-      steps.push({
-        snapshot: [...stack],
-        action: `pop ${b}; pop ${a}; push ${expr}`,
-        stepIndex: step++,
-      });
+
+    if (BINARY_OPERATORS.includes(token)) {
+      if (stack.length < 2) {
+        return { error: `Operator ${token} requires 2 operands`, steps };
+      }
+
+      const operand2 = stack.pop()!;
+      const operand1 = stack.pop()!;
+      const expression = `( ${operand1} ${token} ${operand2} )`;
+
+      stack.push(expression);
+      steps.push(
+        createStep(
+          stack,
+          `pop ${operand2}; pop ${operand1}; push ${expression}`,
+          stepIndex++
+        )
+      );
       continue;
     }
-    return { error: `Unknown token ${tok}`, steps };
+
+    return { error: `Unknown token: ${token}`, steps };
   }
 
   return { result: stack.join(" "), steps };
@@ -145,34 +170,37 @@ export function postfixToInfix(input: string): ConversionResult {
 export function prefixToInfix(input: string): ConversionResult {
   const tokens = tokenize(input).reverse();
   const stack: string[] = [];
-  const steps = [];
-  let step = 0;
+  const steps: StackState[] = [];
+  let stepIndex = 0;
 
-  for (const tok of tokens) {
-    if (isOperand(tok)) {
-      stack.push(tok);
-      steps.push({
-        snapshot: [...stack],
-        action: `push ${tok}`,
-        stepIndex: step++,
-      });
+  for (const token of tokens) {
+    if (isOperand(token)) {
+      stack.push(token);
+      steps.push(createStep(stack, `push ${token}`, stepIndex++));
       continue;
     }
-    if (BINARY_OPERATORS.includes(tok)) {
-      const a = stack.pop();
-      const b = stack.pop();
-      if (a === undefined || b === undefined)
-        return { error: `Operator ${tok} has insufficient operands`, steps };
-      const expr = `( ${a} ${tok} ${b} )`;
-      stack.push(expr);
-      steps.push({
-        snapshot: [...stack],
-        action: `pop ${a}; pop ${b}; push ${expr}`,
-        stepIndex: step++,
-      });
+
+    if (BINARY_OPERATORS.includes(token)) {
+      if (stack.length < 2) {
+        return { error: `Operator ${token} requires 2 operands`, steps };
+      }
+
+      const operand1 = stack.pop()!;
+      const operand2 = stack.pop()!;
+      const expression = `( ${operand1} ${token} ${operand2} )`;
+
+      stack.push(expression);
+      steps.push(
+        createStep(
+          stack,
+          `pop ${operand1}; pop ${operand2}; push ${expression}`,
+          stepIndex++
+        )
+      );
       continue;
     }
-    return { error: `Unknown token ${tok}`, steps };
+
+    return { error: `Unknown token: ${token}`, steps };
   }
 
   return { result: stack.join(" "), steps };

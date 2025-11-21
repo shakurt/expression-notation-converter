@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
-import type { Notation } from "@/types";
+import type { Notation, ConversionResult } from "@/types";
 import {
   infixToPostfix,
   infixToPrefix,
@@ -13,129 +13,167 @@ import {
   validatePrefix,
 } from "@/utils/validators";
 
-import { NotationCard } from "./NotationCard";
+import NotationCard from "./NotationCard";
+
+const EMPTY_RESULT: ConversionResult = { result: undefined, steps: [] };
 
 export const ExpressionInput: React.FC = () => {
-  const [notation, setNotation] = useState<Notation>("infix");
-  const [input, setInput] = useState("");
+  const [notationType, setNotationType] = useState<Notation>("infix");
+  // TODO
+  const [input, setInput] = useState("a+b");
   const [error, setError] = useState<string | null>(null);
+  const [showContent, setShowContent] = useState(false);
 
-  const [infix, setInfix] = useState<{ result?: string; steps: any[] }>({
-    result: undefined,
-    steps: [],
-  });
-  const [prefix, setPrefix] = useState<{ result?: string; steps: any[] }>({
-    result: undefined,
-    steps: [],
-  });
-  const [postfix, setPostfix] = useState<{ result?: string; steps: any[] }>({
-    result: undefined,
-    steps: [],
-  });
+  const [infix, setInfix] = useState<ConversionResult>(EMPTY_RESULT);
+  const [prefix, setPrefix] = useState<ConversionResult>(EMPTY_RESULT);
+  const [postfix, setPostfix] = useState<ConversionResult>(EMPTY_RESULT);
 
-  const handleConvert = () => {
+  const resetResults = () => {
     setError(null);
-    setInfix({ result: undefined, steps: [] });
-    setPrefix({ result: undefined, steps: [] });
-    setPostfix({ result: undefined, steps: [] });
+    setInfix(EMPTY_RESULT);
+    setPrefix(EMPTY_RESULT);
+    setPostfix(EMPTY_RESULT);
+    setShowContent(false);
+  };
+
+  const handleConvert = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    resetResults();
+    setShowContent(false);
 
     if (!input.trim()) {
       setError("Input is empty");
       return;
     }
 
-    if (notation === "infix") {
-      const v = validateInfix(input);
-      if (!v.valid) {
-        setError(v.error || "Invalid infix");
+    // INFIX BLOCK
+    if (notationType === "infix") {
+      const validation = validateInfix(input);
+      if (!validation.valid) {
+        setError(validation.error || "Invalid infix");
         return;
       }
-      const p = infixToPostfix(input);
-      const pre = infixToPrefix(input);
-      setPostfix({ result: p.result, steps: p.steps });
-      setPrefix({ result: pre.result, steps: pre.steps });
-      setInfix({ result: input, steps: v.stackTrace || [] });
+
+      const postfixResult = infixToPostfix(input);
+      const prefixResult = infixToPrefix(input);
+
+      setInfix({ result: input, steps: validation.stackTrace || [] });
+      setPostfix(postfixResult);
+      setPrefix(prefixResult);
+      setShowContent(true);
       return;
     }
 
-    if (notation === "postfix") {
-      const v = validatePostfix(input);
-      if (!v.valid) {
-        setError(v.error || "Invalid postfix");
+    if (notationType === "postfix") {
+      const validation = validatePostfix(input);
+      if (!validation.valid) {
+        setError(validation.error || "Invalid postfix");
         return;
       }
-      const inf = postfixToInfix(input);
-      setPostfix({ result: input, steps: v.stackTrace || [] });
-      setInfix({ result: inf.result, steps: inf.steps || [] });
-      if (inf.result) {
-        const pre = infixToPrefix(inf.result);
-        setPrefix({ result: pre.result, steps: pre.steps || [] });
+
+      const infixResult = postfixToInfix(input);
+      setPostfix({ result: input, steps: validation.stackTrace || [] });
+      setInfix(infixResult);
+
+      if (infixResult.result) {
+        const prefixResult = infixToPrefix(infixResult.result);
+        setPrefix(prefixResult);
       }
+      setShowContent(true);
       return;
     }
 
-    if (notation === "prefix") {
-      const v = validatePrefix(input);
-      if (!v.valid) {
-        setError(v.error || "Invalid prefix");
+    if (notationType === "prefix") {
+      const validation = validatePrefix(input);
+      if (!validation.valid) {
+        setError(validation.error || "Invalid prefix");
         return;
       }
-      const inf = prefixToInfix(input);
-      setPrefix({ result: input, steps: v.stackTrace || [] });
-      setInfix({ result: inf.result, steps: inf.steps || [] });
-      if (inf.result) {
-        const post = infixToPostfix(inf.result);
-        setPostfix({ result: post.result, steps: post.steps || [] });
+
+      const infixResult = prefixToInfix(input);
+      setPrefix({ result: input, steps: validation.stackTrace || [] });
+      setInfix(infixResult);
+
+      if (infixResult.result) {
+        const postfixResult = infixToPostfix(infixResult.result);
+        setPostfix(postfixResult);
       }
-      return;
+      setShowContent(true);
     }
   };
 
   return (
-    <div className="mx-auto max-w-5xl p-4">
-      <div className="mb-4 flex gap-2">
+    <section className="mx-auto max-w-5xl p-4">
+      <form
+        className={`flex gap-2 ${!error && "mb-3"}`}
+        aria-label="Input Control"
+        onSubmit={handleConvert}
+      >
         <select
-          value={notation}
-          onChange={(e) => setNotation(e.target.value as Notation)}
+          value={notationType}
+          onChange={(e) => {
+            resetResults();
+            setNotationType(e.target.value as Notation);
+          }}
           className="rounded border p-2"
           aria-label="Select notation"
         >
-          <option value="infix">Infix</option>
-          <option value="postfix">Postfix</option>
-          <option value="prefix">Prefix</option>
+          <option value="infix" className="text-black">
+            Infix
+          </option>
+          <option value="postfix" className="text-black">
+            Postfix
+          </option>
+          <option value="prefix" className="text-black">
+            Prefix
+          </option>
         </select>
 
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           className="flex-1 rounded border p-2"
-          placeholder="مثال: (A + B) * C  — یا  A B + C *  — یا  * + A B C"
+          placeholder="(A + B) * C |OR| A B + C * |OR| * + A B C"
           aria-label="Expression input"
         />
 
         <button
-          onClick={handleConvert}
-          className="bg-primary rounded p-2 text-white"
+          type="submit"
+          className="bg-primary hover:bg-primary/80 cursor-pointer rounded p-2 font-semibold text-white transition-colors"
         >
           Convert
         </button>
-      </div>
+      </form>
+      {error && <div className="my-3 text-sm text-red-500">{error}</div>}
 
-      {error && <div className="mb-3 text-red-600">{error}</div>}
+      {showContent && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {notationType !== "infix" && (
+            <NotationCard
+              title="Infix"
+              result={infix.result}
+              steps={infix.steps}
+            />
+          )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <NotationCard title="Infix" result={infix.result} steps={infix.steps} />
-        <NotationCard
-          title="Prefix"
-          result={prefix.result}
-          steps={prefix.steps}
-        />
-        <NotationCard
-          title="Postfix"
-          result={postfix.result}
-          steps={postfix.steps}
-        />
-      </div>
-    </div>
+          {notationType !== "prefix" && (
+            <NotationCard
+              title="Prefix"
+              result={prefix.result}
+              steps={prefix.steps}
+            />
+          )}
+
+          {notationType !== "postfix" && (
+            <NotationCard
+              title="Postfix"
+              result={postfix.result}
+              steps={postfix.steps}
+            />
+          )}
+        </div>
+      )}
+    </section>
   );
 };
