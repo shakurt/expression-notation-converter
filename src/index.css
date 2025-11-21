@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #43334c;
-  --color-card: #f8f4ec;
-  --color-primary: #e83c91;
-  --color-secondary: #ff8fb7;
+  --color-bg: #222831;
+  --color-card: #393e46;
+  --color-primary: #ffd369;
+  --color-secondary: #eeeeee;
 }
 
 html,
@@ -15,6 +15,18 @@ body {
 body {
   font-family: "Poppins", sans-serif;
   @apply bg-bg text-white;
+  display: flex;
+  flex-direction: column;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
 }
 
 .container {
