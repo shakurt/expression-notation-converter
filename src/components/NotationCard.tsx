@@ -26,22 +26,18 @@ const NotationCard: React.FC<NotationCardProps> = ({
     setCurrentStep(steps.length > 0 ? steps.length - 1 : 0);
   }, [steps]);
 
-  const displayResult = result;
-
   return (
     <div className="mb-4" aria-label={`${title} notation card`}>
       <Collapse
         title={
           <div
-            className="flex w-full items-center font-medium"
+            className="flex w-full flex-col font-medium"
             aria-label="Title Container"
           >
             <h2 className="font-bold">{title}:</h2>
-            <span className="ml-1 font-mono text-[13px] text-gray-300">
-              {displayResult}
-            </span>
           </div>
         }
+        result={result}
         open={isOpen}
         onToggle={() => setIsOpen((prev) => !prev)}
       >

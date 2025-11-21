@@ -103,27 +103,102 @@ export function infixToPostfix(input: string): ConversionResult {
 }
 
 export function infixToPrefix(input: string): ConversionResult {
-  // Algorithm: Reverse tokens, swap parentheses, convert to postfix, reverse result
-  const swapParenthesis = (token: string): string => {
-    if (token === "(") return ")";
-    if (token === ")") return "(";
-    return token;
-  };
+  // Algorithm: Reverse tokens, swap parentheses, modify associativity, convert to postfix, reverse result
+  const tokens = tokenize(input).reverse();
+  const output: string[] = [];
+  const operatorStack: string[] = [];
+  const steps: StackState[] = [];
+  let stepIndex = 0;
 
-  const reversedTokens = tokenize(input).reverse().map(swapParenthesis);
-  const reversedInput = reversedTokens.join(" ");
+  const getTopOperator = () => operatorStack[operatorStack.length - 1];
 
-  const postfixResult = infixToPostfix(reversedInput);
+  for (const token of tokens) {
+    if (isOperand(token)) {
+      output.push(token);
+      steps.push(createStep(output, `add ${token} to output`, stepIndex++));
+      continue;
+    }
 
-  if (postfixResult.error) {
-    return { error: postfixResult.error, steps: postfixResult.steps };
+    if (token === ")") {
+      operatorStack.push(token);
+      steps.push(
+        createStep(
+          [...output, `[op: ${operatorStack.join(", ")}]`],
+          `push ) to operator stack`,
+          stepIndex++
+        )
+      );
+      continue;
+    }
+
+    if (token === "(") {
+      while (operatorStack.length && getTopOperator() !== ")") {
+        const operator = operatorStack.pop()!;
+        if (BINARY_OPERATORS.includes(operator)) {
+          output.push(operator);
+          steps.push(
+            createStep(output, `move ${operator} to output`, stepIndex++)
+          );
+        }
+      }
+      operatorStack.pop(); // Remove ')'
+      const stackDisplay =
+        operatorStack.length > 0 ? `[op: ${operatorStack.join(", ")}]` : "";
+      steps.push(
+        createStep(
+          [...output, stackDisplay].filter((s) => s),
+          `remove ) from operator stack`,
+          stepIndex++
+        )
+      );
+      continue;
+    }
+
+    // Handle operator - note reversed comparison for prefix
+    if (BINARY_OPERATORS.includes(token)) {
+      while (
+        operatorStack.length &&
+        operatorStack[operatorStack.length - 1] !== ")" &&
+        BINARY_OPERATORS.includes(operatorStack[operatorStack.length - 1]) &&
+        (PRECEDENCE[operatorStack[operatorStack.length - 1]] >
+          PRECEDENCE[token] ||
+          (PRECEDENCE[operatorStack[operatorStack.length - 1]] ===
+            PRECEDENCE[token] &&
+            !RIGHT_ASSOCIATIVE[token]))
+      ) {
+        const operator = operatorStack.pop()!;
+        output.push(operator);
+        steps.push(
+          createStep(output, `move ${operator} to output`, stepIndex++)
+        );
+      }
+
+      operatorStack.push(token);
+      steps.push(
+        createStep(
+          [...output, `[op: ${operatorStack.join(", ")}]`],
+          `push ${token} to operator stack`,
+          stepIndex++
+        )
+      );
+    }
   }
 
-  const prefixResult = postfixResult.result
-    ? postfixResult.result.split(" ").reverse().join(" ")
-    : undefined;
+  // Pop remaining operators (skip parentheses)
+  while (operatorStack.length) {
+    const operator = operatorStack.pop()!;
+    if (BINARY_OPERATORS.includes(operator)) {
+      output.push(operator);
+      steps.push(createStep(output, `move ${operator} to output`, stepIndex++));
+    }
+  }
 
-  return { result: prefixResult, steps: postfixResult.steps };
+  // Filter out any parentheses that might have slipped through
+  const cleanOutput = output.filter(
+    (token) => isOperand(token) || BINARY_OPERATORS.includes(token)
+  );
+  const prefixResult = cleanOutput.reverse().join(" ");
+  return { result: prefixResult, steps };
 }
 
 export function postfixToInfix(input: string): ConversionResult {

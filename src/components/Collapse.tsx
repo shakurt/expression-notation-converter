@@ -6,6 +6,7 @@ type CollapseProps = {
   open?: boolean;
   onToggle?: () => void;
   children: React.ReactNode;
+  result?: string;
 };
 
 const ANIMATION_DURATION = 0.2;
@@ -15,13 +16,14 @@ const Collapse: React.FC<CollapseProps> = ({
   open = false,
   onToggle,
   children,
+  result,
 }) => {
   const buttonLabel = open ? "Collapse" : "Expand";
 
   return (
-    <div className="bg-card rounded-lg border shadow-sm">
+    <div className="bg-card rounded-lg border pb-2 shadow-sm">
       <div
-        className="flex w-full items-center justify-between px-4 py-3 text-left"
+        className="flex w-full items-center justify-between px-4 pt-3 text-left"
         aria-expanded={open}
       >
         {title}
@@ -34,6 +36,9 @@ const Collapse: React.FC<CollapseProps> = ({
           {buttonLabel === "Collapse" ? <UpArrow /> : <DownArrow />}
         </button>
       </div>
+      <span className="px-4 pb-3 font-mono text-xs text-gray-300">
+        {result}
+      </span>
 
       <AnimatePresence initial={false}>
         {open && (
