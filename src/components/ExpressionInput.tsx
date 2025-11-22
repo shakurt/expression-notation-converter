@@ -134,7 +134,7 @@ export const ExpressionInput: React.FC = () => {
           className="flex-1 rounded border p-2"
           placeholder="(A + B) * C |OR| A B + C * |OR| * + A B C"
           aria-label="Expression input"
-          name="expression"
+          name="notation"
           autoComplete="on"
         />
 
