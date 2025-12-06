@@ -40,7 +40,9 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
 
       <div className="flex gap-2">
         {/* Output Stack */}
-        <div className="bg-secondary w-48 rounded-md border p-2">
+        <div
+          className={`bg-secondary rounded-md border p-2 ${hasOperatorStack ? "w-48" : "flex-1"}`}
+        >
           <span className="mb-2 block text-center text-xs font-medium text-nowrap text-gray-700">
             {hasOperatorStack ? "Output Stack" : "Stack"}
           </span>
@@ -89,7 +91,7 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
 
         {/* Stack Progression */}
         <div
-          className="bg-secondary max-h-[400px] min-h-[100px] w-64 overflow-auto rounded-md border p-2"
+          className={`bg-secondary max-h-[400px] min-h-[100px] overflow-auto rounded-md border p-2 ${hasOperatorStack ? "w-64" : "flex-1"}`}
           aria-label="Stack Progression"
         >
           <span className="mb-2 block text-center text-xs font-medium text-nowrap text-gray-700">
