@@ -102,7 +102,7 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
               states.map((state) => (
                 <div
                   key={state.stepIndex}
-                  className="bg-card border-b border-gray-700 p-1 pb-1 last:border-b-0"
+                  className="bg-card rounded border-b border-gray-700 p-1 pb-1 last:border-b-0"
                 >
                   <span className="text-primary block text-center text-xs font-medium">
                     Step #{state.stepIndex + 1}
@@ -113,9 +113,9 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
                         <span>Output:</span>[{state.snapshot.join(", ")}]
                       </div>
                     ) : (
-                      <div className="flex flex-col items-start text-gray-500 italic">
+                      <div className="flex flex-col items-start">
                         <span>Output:</span>
-                        empty
+                        <span className="text-gray-400 italic">empty</span>
                       </div>
                     )}
                     {state.operatorStack !== undefined && (
@@ -126,9 +126,9 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
                             {state.operatorStack.join(", ")}]
                           </div>
                         ) : (
-                          <div className="flex flex-col items-start text-gray-500 italic">
+                          <div className="flex flex-col items-start">
                             <span>Operators:</span>
-                            empty
+                            <span className="text-gray-400 italic">empty</span>
                           </div>
                         )}
                       </>

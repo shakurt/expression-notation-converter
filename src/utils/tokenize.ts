@@ -18,6 +18,8 @@ export function tokenize(input: string): string[] {
   const parentheses = "()";
 
   for (const char of input) {
+    console.log(currentToken);
+
     // Skip spaces
     if (char === " ") {
       pushCurrentToken();
