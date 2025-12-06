@@ -13,7 +13,13 @@ const Footer = () => {
           </a>
           . All rights reserved.
           {" • "}Developed by{" "}
-          <span className="font-semibold">ThePrimeShak</span>
+          <a
+            href="https://github.com/shakurt"
+            target="_blank"
+            className="underline"
+          >
+            <span className="font-semibold">ThePrimeShak</span>
+          </a>
         </p>
       </div>
     </footer>

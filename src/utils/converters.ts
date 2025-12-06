@@ -53,6 +53,16 @@ export function infixToPostfix(input: string): ConversionResult {
     }
 
     if (token === ")") {
+      // First, show that we're processing the closing parenthesis
+      steps.push(
+        createStep(
+          output,
+          `process ) - pop until matching (`,
+          stepIndex++,
+          operatorStack
+        )
+      );
+
       while (operatorStack.length && getTopOperator() !== "(") {
         const operator = operatorStack.pop()!;
         output.push(operator);
@@ -69,7 +79,7 @@ export function infixToPostfix(input: string): ConversionResult {
       steps.push(
         createStep(
           output,
-          `remove ( from operator stack`,
+          `remove matching ( from operator stack`,
           stepIndex++,
           operatorStack
         )
@@ -78,12 +88,11 @@ export function infixToPostfix(input: string): ConversionResult {
     }
 
     // Handle operator
-    const topOperator = getTopOperator();
     while (
       operatorStack.length &&
-      topOperator !== "(" &&
-      (PRECEDENCE[topOperator] > PRECEDENCE[token] ||
-        (PRECEDENCE[topOperator] === PRECEDENCE[token] &&
+      getTopOperator() !== "(" &&
+      (PRECEDENCE[getTopOperator()] > PRECEDENCE[token] ||
+        (PRECEDENCE[getTopOperator()] === PRECEDENCE[token] &&
           !RIGHT_ASSOCIATIVE[token]))
     ) {
       const operator = operatorStack.pop()!;
@@ -109,18 +118,20 @@ export function infixToPostfix(input: string): ConversionResult {
     );
   }
 
-  // Pop remaining operators
+  // Pop remaining operators (skip parentheses)
   while (operatorStack.length) {
     const operator = operatorStack.pop()!;
-    output.push(operator);
-    steps.push(
-      createStep(
-        output,
-        `move ${operator} to output`,
-        stepIndex++,
-        operatorStack
-      )
-    );
+    if (BINARY_OPERATORS.includes(operator)) {
+      output.push(operator);
+      steps.push(
+        createStep(
+          output,
+          `move ${operator} to output`,
+          stepIndex++,
+          operatorStack
+        )
+      );
+    }
   }
 
   return { result: output.join(" "), steps };
@@ -159,6 +170,16 @@ export function infixToPrefix(input: string): ConversionResult {
     }
 
     if (token === "(") {
+      // First, show that we're processing the opening parenthesis
+      steps.push(
+        createStep(
+          output,
+          `process ( - pop until matching )`,
+          stepIndex++,
+          operatorStack
+        )
+      );
+
       while (operatorStack.length && getTopOperator() !== ")") {
         const operator = operatorStack.pop()!;
         if (BINARY_OPERATORS.includes(operator)) {
@@ -177,7 +198,7 @@ export function infixToPrefix(input: string): ConversionResult {
       steps.push(
         createStep(
           output,
-          `remove ) from operator stack`,
+          `remove matching ) from operator stack`,
           stepIndex++,
           operatorStack
         )
@@ -191,11 +212,7 @@ export function infixToPrefix(input: string): ConversionResult {
         operatorStack.length &&
         operatorStack[operatorStack.length - 1] !== ")" &&
         BINARY_OPERATORS.includes(operatorStack[operatorStack.length - 1]) &&
-        (PRECEDENCE[operatorStack[operatorStack.length - 1]] >
-          PRECEDENCE[token] ||
-          (PRECEDENCE[operatorStack[operatorStack.length - 1]] ===
-            PRECEDENCE[token] &&
-            !RIGHT_ASSOCIATIVE[token]))
+        PRECEDENCE[operatorStack[operatorStack.length - 1]] > PRECEDENCE[token]
       ) {
         const operator = operatorStack.pop()!;
         output.push(operator);

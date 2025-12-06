@@ -40,7 +40,9 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
 
       <div className="flex gap-2">
         {/* Output Stack */}
-        <div className="bg-secondary w-48 rounded-md border p-2">
+        <div
+          className={`bg-secondary rounded-md border p-2 ${hasOperatorStack ? "w-48" : "flex-1"}`}
+        >
           <span className="mb-2 block text-center text-xs font-medium text-nowrap text-gray-700">
             {hasOperatorStack ? "Output Stack" : "Stack"}
           </span>
@@ -89,7 +91,7 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
 
         {/* Stack Progression */}
         <div
-          className="bg-secondary max-h-[400px] min-h-[100px] w-64 overflow-auto rounded-md border p-2"
+          className={`bg-secondary max-h-[400px] min-h-[100px] overflow-auto rounded-md border p-2 ${hasOperatorStack ? "w-64" : "flex-1"}`}
           aria-label="Stack Progression"
         >
           <span className="mb-2 block text-center text-xs font-medium text-nowrap text-gray-700">
@@ -100,7 +102,7 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
               states.map((state) => (
                 <div
                   key={state.stepIndex}
-                  className="bg-card border-b border-gray-700 p-1 pb-1 last:border-b-0"
+                  className="bg-card rounded border-b border-gray-700 p-1 pb-1 last:border-b-0"
                 >
                   <span className="text-primary block text-center text-xs font-medium">
                     Step #{state.stepIndex + 1}
@@ -111,9 +113,9 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
                         <span>Output:</span>[{state.snapshot.join(", ")}]
                       </div>
                     ) : (
-                      <div className="flex flex-col items-start text-gray-500 italic">
+                      <div className="flex flex-col items-start">
                         <span>Output:</span>
-                        empty
+                        <span className="text-gray-400 italic">empty</span>
                       </div>
                     )}
                     {state.operatorStack !== undefined && (
@@ -124,9 +126,9 @@ const StackVisualizer: React.FC<StackVisualizerProps> = ({
                             {state.operatorStack.join(", ")}]
                           </div>
                         ) : (
-                          <div className="flex flex-col items-start text-gray-500 italic">
+                          <div className="flex flex-col items-start">
                             <span>Operators:</span>
-                            empty
+                            <span className="text-gray-400 italic">empty</span>
                           </div>
                         )}
                       </>

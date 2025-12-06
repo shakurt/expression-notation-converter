@@ -132,9 +132,16 @@ export const ExpressionInput: React.FC = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           className="flex-1 rounded border p-2"
-          placeholder="(A + B) * C |OR| A B + C * |OR| * + A B C"
+          placeholder={
+            notationType === "infix"
+              ? "e.g., (A + B) * C"
+              : notationType === "postfix"
+                ? "e.g., A B + C *"
+                : "e.g., * + A B C"
+          }
+          // "(A + B) * C |OR| A B + C * |OR| * + A B C"
           aria-label="Expression input"
-          name="expression"
+          name="notation"
           autoComplete="on"
         />
 

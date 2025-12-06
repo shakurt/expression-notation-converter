@@ -123,7 +123,6 @@ export function validatePrefix(input: string): ValidationResult {
   return { valid: true, stackTrace };
 }
 
-// ================= Infix =================
 export function validateInfix(input: string): ValidationResult {
   const tokens = tokenize(input);
   const stackTrace: StackState[] = [];
@@ -132,7 +131,7 @@ export function validateInfix(input: string): ValidationResult {
   let prev: string | null = null;
   let step = 0;
 
-  // قاعده‌های اولیه: پرانتزها بالا/پایین باشند، ترتیب عملوند/عملگر منطقی باشد
+  // Basic rules: parentheses must be balanced, operand/operator order must be logical
   for (const tok of tokens) {
     if (tok === "(") {
       parenStack.push(tok);
